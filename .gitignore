@@ -11,6 +11,9 @@ venv/
 
 run.err.log
 run.out.log
+*.log
+*.tmp
+*.bak
 backup_*.json.gz
 
 meta_*.html
@@ -19,3 +22,7 @@ meta_*.html
 htmlcov/
 
 tests/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

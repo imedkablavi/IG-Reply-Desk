@@ -1,19 +1,33 @@
-# Instagram Auto Reply System
+# IG Reply Desk
 
-FastAPI service for handling Instagram webhooks, queuing replies, and managing operator workflows through Telegram.
+IG Reply Desk is a FastAPI backend for Instagram automation. It receives webhook events, queues outgoing work, and gives operators day-to-day controls through Telegram.
 
-## What is in the project
+## Project Identity
 
-- `app/` application code
+- Repository name: ig-reply-desk
+- One-line description: Reliable Instagram webhook and auto-reply backend with Redis queues, worker controls, and Telegram-based operations.
+- GitHub About text: Backend service for Instagram webhooks and auto-replies, built with FastAPI, Redis queues, and Telegram operator controls.
+- Suggested topics: fastapi, instagram, webhook, automation, redis, postgres, telegram-bot, background-workers, saas-backend
+
+## What this service does
+
+- Handles Instagram webhook events from Meta
+- Pushes reply jobs into Redis queues
+- Processes messages through workers instead of direct inline sends
+- Gives operators runtime controls through Telegram commands
+
+## Key folders
+
 - `app/api/` webhook endpoints
-- `app/services/` reply flow, workers, scheduler, and account settings
-- `app/bot/` Telegram bot handlers
-- `docker-compose.yml` local stack for app, Postgres, and Redis
+- `app/services/` reply logic, worker management, and scheduling
+- `app/bot/` Telegram handlers and keyboards
+- `app/routers/ops.py` operations and health endpoints
+- `docker-compose.yml` local stack (app, Postgres, Redis)
 
-## Local run
+## Run locally
 
-1. Copy `.env.example` to `.env`.
-2. Fill in the Meta and Telegram values.
+1. Create `.env` from `.env.example`.
+2. Add your Meta and Telegram credentials.
 3. Start the stack:
 
 ```bash
@@ -24,13 +38,13 @@ The API will be available at `http://localhost:8000`.
 
 ## Useful endpoints
 
-- `GET /health` basic health check
+- `GET /health` quick health check
 - `GET /ops/status` queue and worker status
 - `GET /instagram/webhook` Meta webhook verification
-- `POST /instagram/webhook` Meta webhook events
+- `POST /instagram/webhook` incoming Instagram events
 
-## Notes
+## Practical notes
 
-- For local runs, tables are created on startup.
-- Redis and Postgres are expected to be available before the app starts handling traffic.
-- `.env`, logs, tests, and local reference HTML files are ignored by Git on purpose.
+- In local mode, database tables are created at startup.
+- Redis and Postgres should be reachable before processing live traffic.
+- Environment files, logs, and local test artifacts are intentionally excluded from Git.

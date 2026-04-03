@@ -63,3 +63,4 @@ Service URL:
 - Local startup creates required database tables.
 - Redis and Postgres must be healthy before handling production traffic.
 - Environment files, logs, and local artifacts are intentionally excluded from Git.
+- Documentation has been refreshed to improve operational clarity and security guidance.

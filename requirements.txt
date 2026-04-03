@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+gunicorn
+aiogram
+sqlalchemy
+asyncpg
+alembic
+pydantic
+pydantic-settings
+python-dotenv
+redis
+httpx
+cryptography
+python-multipart
+uvloop
+psutil

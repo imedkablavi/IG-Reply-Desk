@@ -1,91 +1,102 @@
 # Operations Runbook - IG Reply Desk
 
-This runbook is for daily operations. Keep it simple: check status, react fast, and isolate issues early.
+This runbook is written for real daily use.
+Follow it in order, escalate early, and avoid risky manual fixes during incidents.
 
-## Morning check (5 minutes)
+## Morning checks (about 5 minutes)
 
-1. Open `/ops/status` and confirm:
+1. Open `/ops/status` and verify:
 - `system_status = OPERATIONAL`
 - `workers_alive > 0`
 - `total_queue_backlog < 50`
 
 2. Review Telegram admin alerts:
-- Treat `SILENCE DETECTED` and `CRITICAL` as high priority.
+- Treat `SILENCE DETECTED` and `CRITICAL` as immediate action items.
 
 3. Run `/setup_check` in the bot:
-- Confirms tokens and integration basics are still valid.
+- Confirm tokens and baseline integration health.
 
 ## Live monitoring
 
-### Key alerts
+### Alert meaning
 
-- `SILENCE DETECTED`: workers may be stuck or not processing.
-- `QUEUE BACKLOG`: incoming load is higher than processing capacity.
-- `HEARTBEAT ALERT`: webhook delivery or connectivity issue.
+- `SILENCE DETECTED`: workers may be stalled or not consuming jobs.
+- `QUEUE BACKLOG`: incoming workload is exceeding processing capacity.
+- `HEARTBEAT ALERT`: webhook delivery or connectivity problem.
 
-### Fast actions
+### First actions
 
-- If queue size is above 1000:
-    check `/health_report`; if one account is causing the spike, run `/lock_account {id}`.
-- If incoming events are present but outgoing replies are zero:
-    restart worker processes.
+- Queue above 1000:
+    check `/health_report`; if a single account is causing load, run `/lock_account {id}`.
+- Incoming events > 0 but outgoing replies = 0:
+    restart worker services and re-check `/ops/status`.
 
-## Incident response
+## Incident response playbook
 
-### A) Full outage (Meta issue or internal bug)
+### A) Full outage (Meta issue or internal failure)
 
 1. Pause processing:
 - `/pause_all`
 
-2. Investigate:
-- review application logs
-- check Meta status page
+2. Investigate quickly:
+- review app logs
+- check Meta platform status
 
-3. Resume when stable:
+3. Resume only when stable:
 - `/resume_all`
 
-### B) Single noisy account (loop or spam)
+### B) Noisy account (loop, spam, bad rules)
 
-1. Identify affected account from alerts.
+1. Identify the account from alerts.
 2. Isolate it:
 - `/lock_account {id}`
 
-3. Inspect failed items:
+3. Inspect failed/blocked items:
 - `/deadletters {id}`
 
-4. Recover after fix:
+4. Recover after root cause is fixed:
 - `/unlock_account {id}`
 
 ### C) No outgoing replies
 
-1. Verify incoming rate in `/ops/status`.
-2. If incoming > 0 and outgoing = 0:
-- restart worker services immediately.
+1. Confirm incoming rate in `/ops/status`.
+2. If incoming exists and outgoing is zero:
+- restart workers immediately.
 
-## End-of-day safety check
+## Security response checklist
 
-1. Run `/stats` and review reply mix (human vs auto).
-2. Sample dead letters with `/deadletters {id}`.
+Run this checklist if you suspect token leak, abuse, or unauthorized access.
+
+1. Pause processing: `/pause_all`.
+2. Rotate Meta and Telegram tokens.
+3. Revoke old credentials and active sessions.
+4. Audit logs for unusual sources, spikes, or command misuse.
+5. Resume only after verification checks pass.
+
+## End-of-day checks
+
+1. Run `/stats` and review reply quality (human vs auto ratio).
+2. Inspect a sample of dead letters with `/deadletters {id}`.
 3. Confirm `global_kill_switch` is not left enabled.
 
 ## Weekly maintenance
 
 1. Confirm retention cleanup jobs completed.
-2. Verify token refresh is healthy.
-3. Review average processing time trend; scale workers if latency keeps rising.
+2. Verify token rotation and expiration windows.
+3. Review processing latency trend and scale workers when needed.
 
-## Feature flow: keyword in comment -> private DM
+## Feature flow: comment keyword to private DM
 
 ### Setup
 
 1. In Telegram, open `💬 رد خاص للتعليقات`.
-2. Add keyword and DM response.
+2. Add keyword and DM text.
 3. Optionally update account copy in `📝 تخصيص نصوص الحساب`.
 
 ### Event requirements
 
-- Webhook payload must include `entry[].changes[]`.
-- `field` must be `comments`.
+- Webhook payload includes `entry[].changes[]`.
+- `field` equals `comments`.
 - Supported media types: `VIDEO`, `REELS`, `IGTV`.
 
 ### Local payload example
@@ -119,18 +130,15 @@ This runbook is for daily operations. Keep it simple: check status, react fast, 
 }
 ```
 
-Reference sample:
-`tests/payloads/comment_video_keyword.json`
-
 ### Expected result
 
-1. Comment matches active keyword rules.
-2. DM job is pushed to `queue:{account_id}`.
+1. Comment matches an active keyword rule.
+2. DM job is queued in `queue:{account_id}`.
 3. Worker sends DM through Graph API.
-4. Activity log includes `COMMENT_DM_TRIGGERED`.
+4. Activity log records `COMMENT_DM_TRIGGERED`.
 
 ### Negative checks
 
 1. Media type is `IMAGE` -> no DM is sent.
 2. No keyword match -> no DM is sent.
-3. Duplicate event with same comment ID -> ignored by deduplication.
+3. Duplicate comment ID -> event is ignored by deduplication.
